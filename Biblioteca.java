@@ -1,69 +1,108 @@
-public class Livro import java.io.*;
-        import java.util.*;
+import java.io.*;
+import java.util.*;
 
-public class Biblioteca {
+class Biblioteca {
     private List<Livro> livros = new ArrayList<>();
     private List<Membro> membros = new ArrayList<>();
     private List<Emprestimo> emprestimos = new ArrayList<>();
 
-    public List<Livro> getLivros() {
-        return livros;
-    }
-
-    public List<Membro> getMembros() {
-        return membros;
-    }
-
-    public List<Emprestimo> getEmprestimos() {
-        return emprestimos;
-    }
-
     public void adicionarLivro(Livro livro) {
+        if (buscarLivro(livro.getIsbn()) != null) {
+            System.out.println("Livro já cadastrado.");
+            return;
+        }
         livros.add(livro);
         System.out.println("Livro adicionado: " + livro);
     }
 
-    public void removerLivro(Livro livro) {
+    public void removerLivro(String isbn) {
+        Livro livro = buscarLivro(isbn);
+        if (livro == null) {
+            System.out.println("Livro não encontrado.");
+            return;
+        }
+        if (livro.isEmprestado()) {
+            System.out.println("Livro está emprestado e não pode ser removido.");
+            return;
+        }
         livros.remove(livro);
         System.out.println("Livro removido: " + livro);
     }
 
+    public Livro buscarLivro(String isbn) {
+        return livros.stream().filter(l -> l.getIsbn().equals(isbn)).findFirst().orElse(null);
+    }
+
     public void registrarMembro(Membro membro) {
+        if (buscarMembro(membro.getId()) != null) {
+            System.out.println("Membro já registrado.");
+            return;
+        }
         membros.add(membro);
         System.out.println("Membro registrado: " + membro);
     }
 
-    public void registrarEmprestimo(Livro livro, Membro membro) {
-        Emprestimo emprestimo = new Emprestimo(livro, membro, new Date());
-        emprestimos.add(emprestimo);
-        System.out.println("Emprestimo registrado: " + emprestimo);
+    public Membro buscarMembro(int id) {
+        return membros.stream().filter(m -> m.getId() == id).findFirst().orElse(null);
     }
 
-    public void devolverLivro(Emprestimo emprestimo) {
+    public void registrarEmprestimo(String isbn, int membroId) {
+        Livro livro = buscarLivro(isbn);
+        Membro membro = buscarMembro(membroId);
+
+        if (livro == null || membro == null) {
+            System.out.println("Livro ou membro não encontrado.");
+            return;
+        }
+        if (livro.isEmprestado()) {
+            System.out.println("Livro já está emprestado.");
+            return;
+        }
+        emprestimos.add(new Emprestimo(livro, membro));
+        System.out.println("Empréstimo realizado: " + livro.getTitulo() + " para " + membro.getNome());
+    }
+
+    public void devolverLivro(String isbn, int membroId) {
+        Emprestimo emprestimo = emprestimos.stream()
+                .filter(e -> e.getLivro().getIsbn().equals(isbn) && e.getMembro().getId() == membroId)
+                .findFirst()
+                .orElse(null);
+
+        if (emprestimo == null) {
+            System.out.println("Empréstimo não encontrado.");
+            return;
+        }
         emprestimos.remove(emprestimo);
-        System.out.println("Livro devolvido: " + emprestimo);
+        emprestimo.getLivro().devolver();
+        System.out.println("Livro devolvido: " + emprestimo.getLivro().getTitulo());
     }
 
-    public void salvarDadosEmArquivo(String nomeArquivo) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(nomeArquivo))) {
-            for (Livro livro : livros) {
-                writer.write("Livro:" + livro + "\n");
-            }
-            for (Membro membro : membros) {
-                writer.write("Membro:" + membro + "\n");
-            }
-            for (Emprestimo emprestimo : emprestimos) {
-                writer.write("Emprestimo:" + emprestimo + "\n");
-            }
+    public void listarEmprestimos() {
+        if (emprestimos.isEmpty()) {
+            System.out.println("Nenhum empréstimo registrado.");
+            return;
+        }
+        emprestimos.forEach(System.out::println);
+    }
+
+    public void salvarDados(String arquivo) throws IOException {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(arquivo))) {
+            out.writeObject(livros);
+            out.writeObject(membros);
+            out.writeObject(emprestimos);
+            System.out.println("Dados salvos com sucesso.");
         }
     }
 
-    public void carregarDadosDeArquivo(String nomeArquivo) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new FileReader(nomeArquivo))) {
-            String linha;
-            while ((linha = reader.readLine()) != null) {
-                System.out.println(linha);
-            }
+    @SuppressWarnings("unchecked")
+    public void carregarDados(String arquivo) throws IOException {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(arquivo))) {
+            livros = (List<Livro>) in.readObject();
+            membros = (List<Membro>) in.readObject();
+            emprestimos = (List<Emprestimo>) in.readObject();
+            System.out.println("Dados carregados com sucesso.");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 }

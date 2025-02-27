@@ -1,33 +1,28 @@
-public class Livro {
+import java.io.Serializable;
+
+class Livro implements Serializable {
     private String titulo;
     private String autor;
-    private String ISBN;
+    private String isbn;
+    private boolean emprestado;
 
-    public Livro(String titulo, String autor, String ISBN) {
+    public Livro(String titulo, String autor, String isbn) {
         this.titulo = titulo;
         this.autor = autor;
-        this.ISBN = ISBN;
+        this.isbn = isbn;
+        this.emprestado = false;
     }
 
-    public String getTitulo() {
-        return titulo;
-    }
+    public String getTitulo() { return titulo; }
+    public String getAutor() { return autor; }
+    public String getIsbn() { return isbn; }
+    public boolean isEmprestado() { return emprestado; }
 
-    public String getAutor() {
-        return autor;
-    }
-
-    public String getISBN() {
-        return ISBN;
-    }
-
+    public void emprestar() { this.emprestado = true; }
+    public void devolver() { this.emprestado = false; }
 
     @Override
     public String toString() {
-        return "Livro{" +
-                "titulo='" + titulo + '\'' +
-                ", autor='" + autor + '\'' +
-                ", ISBN='" + ISBN + '\'' +
-                '}';
+        return titulo + " - " + autor + " (ISBN: " + isbn + ")";
     }
 }
