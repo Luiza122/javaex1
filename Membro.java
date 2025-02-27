@@ -9,13 +9,25 @@ public class Membro {
         this.email = email;
     }
 
+    public String getNome() {
+        return nome;
+    }
+
     public int getId() {
         return id;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+
     @Override
     public String toString() {
-        return "👤 " + nome + " | ID: " + id + " | Email: " + email;
+        return "Membro{" +
+                "nome='" + nome + '\'' +
+                ", id=" + id +
+                ", email='" + email + '\'' +
+                '}';
     }
 }
-
